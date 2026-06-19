@@ -1,14 +1,17 @@
 {
-  "name": "ml-informatica-ai-backend",
-  "version": "1.1.0",
-  "type": "module",
+  "name": "ml-informatica-ai-backend-protetto",
+  "version": "2.0.0",
+  "description": "Backend protetto per Mauri AI Assistant - ML Informatica",
+  "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
-    "dotenv": "^16.4.7",
-    "express": "^4.18.3",
-    "openai": "^4.104.0"
+    "express": "^4.18.2",
+    "openai": "^4.0.0"
+  },
+  "engines": {
+    "node": ">=18"
   }
 }
