@@ -1,7 +1,7 @@
 {
-  "name": "ml-informatica-ai-backend-protetto",
-  "version": "2.0.0",
-  "description": "Backend protetto per Mauri AI Assistant - ML Informatica",
+  "name": "ml-informatica-ai-backend-v4-no-topic-blocks",
+  "version": "4.0.0",
+  "description": "Backend Mauri AI senza blocchi argomento, con solo rate limit e limiti anti-abuso",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
