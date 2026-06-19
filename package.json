@@ -1,7 +1,7 @@
 {
-  "name": "ml-informatica-ai-backend-v5-fetch-direct-retry",
-  "version": "5.0.0",
-  "description": "Backend Mauri AI con fetch diretto verso OpenAI, retry automatico e senza SDK OpenAI/node-fetch",
+  "name": "ml-informatica-ai-backend-v6-hardware-attuale",
+  "version": "6.0.0",
+  "description": "Backend Mauri AI con prompt aggiornato per hardware recente: RTX 5090, Ryzen 9 9950X, disponibilità e prezzi non inventati",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"

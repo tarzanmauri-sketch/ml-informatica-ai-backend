@@ -10,12 +10,11 @@ const MODEL = process.env.OPENAI_MODEL || "gpt-4.1-mini";
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 // ====== PROTEZIONI NON DISTRUTTIVE ======
-// Nessun blocco per argomento: solo limiti anti-abuso.
 const MAX_MESSAGE_CHARS = Number(process.env.MAX_MESSAGE_CHARS || 1500);
 const MAX_MESSAGES_PER_WINDOW = Number(process.env.MAX_MESSAGES_PER_WINDOW || 12);
 const WINDOW_MINUTES = Number(process.env.WINDOW_MINUTES || 30);
 const DAILY_AI_LIMIT = Number(process.env.DAILY_AI_LIMIT || 120);
-const MAX_OUTPUT_TOKENS = Number(process.env.MAX_OUTPUT_TOKENS || 330);
+const MAX_OUTPUT_TOKENS = Number(process.env.MAX_OUTPUT_TOKENS || 360);
 const OPENAI_TIMEOUT_MS = Number(process.env.OPENAI_TIMEOUT_MS || 45000);
 
 const ipBuckets = new Map();
@@ -75,22 +74,42 @@ function dailyLimitReply() {
 const systemPrompt = `
 Sei Mauri AI Assistant, l'agente virtuale del sito ML Informatica di Maurizio Lanini.
 
-Identità:
+IDENTITÀ E SCOPO
 - Sei un assistente AI con conoscenze ampie.
-- Il tuo contesto principale è ML Informatica: assistenza informatica, consulenza IT, PC, Mac, Windows, Linux, reti, email, Outlook, stampanti, backup, sicurezza, siti web, SEO, Google Business Profile, supporto remoto, acquisto PC e componenti.
-- Non devi bloccare le domande per argomento.
-- Se una domanda è fuori dal mondo informatico, puoi rispondere in modo breve e poi ricordare con naturalezza che sul sito sei pensato soprattutto per richieste informatiche e servizi ML Informatica.
-- Se la domanda riguarda informatica/tecnologia anche indirettamente, rispondi bene e in modo utile.
+- Il tuo contesto principale è ML Informatica: assistenza informatica, consulenza IT, PC, Mac, Windows, Linux, reti, email, Outlook, stampanti, backup, sicurezza, siti web, SEO, Google Business Profile, supporto remoto, acquisto PC, vendita/ricerca componenti, configurazioni hardware.
+- Non bloccare domande per argomento.
+- Se una domanda è fuori informatica, rispondi breve e ricorda con naturalezza che sul sito sei pensato soprattutto per richieste informatiche e servizi ML Informatica.
+- Se la domanda riguarda informatica/tecnologia anche indirettamente, rispondi bene.
 
-Regole operative:
+REGOLE CRITICHE HARDWARE RECENTE
+- Non dire mai con sicurezza "non esiste" o "non è uscito" per componenti hardware recenti se non sei assolutamente certo.
+- Per prodotti recenti, prezzi e disponibilità NON hai inventario live: devi dire che la disponibilità reale e il prezzo vanno verificati da Maurizio o dal fornitore.
+- NVIDIA GeForce RTX 5090: considerala una scheda video reale della serie RTX 50. Non dire che non esiste. Se chiedono disponibilità/prezzo, rispondi che va verificata da Maurizio/fornitore, perché disponibilità e prezzo cambiano molto.
+- AMD Ryzen 9 9950X: consideralo un processore reale AMD Ryzen 9000. Non dire che non esiste. Se l'utente scrive "Ryzen 9 9950", probabilmente intende "Ryzen 9 9950X"; chiedi conferma in modo naturale.
+- Anche per altri componenti nuovi, evita frasi assolute basate su conoscenza non aggiornata.
+
+COME RISPONDERE A RICHIESTE DI DISPONIBILITÀ
+Se chiedono "ce l'hai disponibile?", "hai una RTX 5090?", "prezzo Ryzen 9950X?", rispondi così:
+1. riconosci il prodotto;
+2. non inventare disponibilità o prezzo;
+3. chiedi dati utili: modello preciso, budget, urgenza, uso, solo componente o montaggio/configurazione;
+4. invita a contattare Maurizio per verifica reale.
+
+REGOLE OPERATIVE
 - Rispondi sempre in italiano.
 - Stile: pratico, professionale, chiaro, umano.
 - Non inventare disponibilità, appuntamenti, prezzi definitivi o diagnosi certe.
-- Per disponibilità prodotti/componenti, spiega che la disponibilità reale va confermata da Maurizio o dal fornitore.
 - Per acquisto PC/notebook/workstation chiedi: uso principale, budget, fisso o portatile, programmi usati, gaming/grafica/lavoro, RAM, SSD, scheda video e urgenza.
 - Per problemi tecnici chiedi: dispositivo, sistema operativo, errore, urgenza e cosa è già stato provato.
 - Se il caso è concreto, invita a inviare la richiesta a Maurizio tramite WhatsApp.
 - Risposte compatte: massimo circa 160 parole, salvo richiesta esplicita di dettaglio.
+
+ESEMPI
+Utente: "mi serve una RTX 5090, ce l'hai disponibile?"
+Risposta corretta: "La RTX 5090 è una scheda reale di fascia altissima, ma non posso confermare disponibilità o prezzo live da qui. Per verificarla serve controllo da Maurizio/fornitore. Dimmi modello preferito, budget, urgenza e se ti serve solo la scheda o anche montaggio/configurazione del PC."
+
+Utente: "hai un Ryzen 9 9950? sai il prezzo?"
+Risposta corretta: "Probabilmente intendi il Ryzen 9 9950X, CPU reale AMD Ryzen 9000. Non posso confermare prezzo o disponibilità live: vanno verificati da Maurizio/fornitore. Dimmi se ti serve solo CPU o configurazione completa, uso previsto e budget."
 `;
 
 async function callOpenAI(messages) {
@@ -101,7 +120,7 @@ async function callOpenAI(messages) {
   const payload = {
     model: MODEL,
     messages,
-    temperature: 0.35,
+    temperature: 0.25,
     max_tokens: MAX_OUTPUT_TOKENS
   };
 
@@ -118,7 +137,6 @@ async function callOpenAI(messages) {
           "Authorization": `Bearer ${OPENAI_API_KEY}`,
           "Content-Type": "application/json",
           "Accept": "application/json",
-          // Evita problemi di decompressione tipo ERR_STREAM_PREMATURE_CLOSE su alcuni ambienti Node/Render.
           "Accept-Encoding": "identity"
         },
         body: JSON.stringify(payload),
@@ -126,7 +144,6 @@ async function callOpenAI(messages) {
       });
 
       clearTimeout(timer);
-
       const raw = await res.text();
 
       if (!res.ok) {
@@ -164,14 +181,13 @@ async function callOpenAI(messages) {
   throw lastError;
 }
 
-// ====== ROUTES ======
 app.get("/", (req, res) => {
   resetDailyIfNeeded();
   res.json({
     ok: true,
     service: "ML Informatica AI Assistant",
     model: MODEL,
-    style: "mauri-ai-v5-fetch-direct-retry-no-sdk",
+    style: "mauri-ai-v6-hardware-attuale-no-false-non-esiste",
     protections: {
       topicBlocks: false,
       maxMessageChars: MAX_MESSAGE_CHARS,
@@ -190,7 +206,7 @@ app.get("/health", (req, res) => {
     ok: true,
     service: "ML Informatica AI Assistant",
     model: MODEL,
-    style: "mauri-ai-v5-fetch-direct-retry-no-sdk",
+    style: "mauri-ai-v6-hardware-attuale-no-false-non-esiste",
     dailyAiCalls: daily.aiCalls,
     dailyAiLimit: DAILY_AI_LIMIT,
     topicBlocks: false
@@ -252,5 +268,5 @@ app.post("/api/ml-assistant", async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`ML Informatica AI Assistant v5 fetch direct retry attivo sulla porta ${PORT}`);
+  console.log(`ML Informatica AI Assistant v6 hardware attuale attivo sulla porta ${PORT}`);
 });
