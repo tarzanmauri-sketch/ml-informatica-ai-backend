@@ -1,7 +1,7 @@
 {
-  "name": "ml-informatica-ai-backend-v8-6-photo-awareness",
-  "version": "8.6.0",
-  "description": "Mauri AI V2.6: chat e voce sanno della funzione Foto/screenshot",
+  "name": "ml-informatica-ai-backend-v8-7-vision-context-fix",
+  "version": "8.7.0",
+  "description": "Mauri AI V2.7: fix robusto contesto foto nelle domande successive",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
