@@ -1,7 +1,7 @@
 {
-  "name": "ml-informatica-ai-backend-v8-3-vision-cyber-scan",
-  "version": "8.3.0",
-  "description": "Mauri AI V2.3 Vision Cyber Scan: UI scansione + timeout/logs Vision",
+  "name": "ml-informatica-ai-backend-v8-4-auto-cyber-scan",
+  "version": "8.4.0",
+  "description": "Mauri AI V2.4 Auto Cyber Scan: auto-analisi foto dopo upload",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
