@@ -1,7 +1,7 @@
 {
-  "name": "ml-informatica-ai-backend-v8-5-vision-memory",
-  "version": "8.5.0",
-  "description": "Mauri AI V2.5 Vision Memory: la chat ricorda l'ultima foto analizzata",
+  "name": "ml-informatica-ai-backend-v8-6-photo-awareness",
+  "version": "8.6.0",
+  "description": "Mauri AI V2.6: chat e voce sanno della funzione Foto/screenshot",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
