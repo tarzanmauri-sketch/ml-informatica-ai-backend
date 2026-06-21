@@ -1,7 +1,7 @@
 {
-  "name": "ml-informatica-ai-backend-v7-voice-test",
-  "version": "7.0.0",
-  "description": "Backend Mauri AI con chat v6 e modulo Voice V1 TEST Realtime",
+  "name": "ml-informatica-ai-backend-v7-1-voice-male-mic",
+  "version": "7.1.0",
+  "description": "Backend Mauri AI Voice V1.1 con voce maschile default cedar e microfono più visibile",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"

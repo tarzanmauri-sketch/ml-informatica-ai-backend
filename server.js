@@ -11,7 +11,7 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 // ====== MAURI AI VOICE V1 TEST ======
 const REALTIME_MODEL = process.env.REALTIME_MODEL || "gpt-realtime-2";
-const REALTIME_VOICE = process.env.REALTIME_VOICE || "marin";
+const REALTIME_VOICE = process.env.REALTIME_VOICE || "cedar";
 const VOICE_MAX_SESSIONS_PER_WINDOW = Number(process.env.VOICE_MAX_SESSIONS_PER_WINDOW || 6);
 const VOICE_WINDOW_MINUTES = Number(process.env.VOICE_WINDOW_MINUTES || 30);
 const DAILY_VOICE_LIMIT = Number(process.env.DAILY_VOICE_LIMIT || 40);
