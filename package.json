@@ -1,7 +1,7 @@
 {
-  "name": "ml-informatica-ai-backend-v8-2-fix-foto-payload",
-  "version": "8.2.0",
-  "description": "Mauri AI V2.2 Vision FIX: aumenta limite JSON foto e comprime meglio immagini iPhone",
+  "name": "ml-informatica-ai-backend-v8-3-vision-cyber-scan",
+  "version": "8.3.0",
+  "description": "Mauri AI V2.3 Vision Cyber Scan: UI scansione + timeout/logs Vision",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"

@@ -30,6 +30,7 @@ const WINDOW_MINUTES = Number(process.env.WINDOW_MINUTES || 30);
 const DAILY_AI_LIMIT = Number(process.env.DAILY_AI_LIMIT || 120);
 const MAX_OUTPUT_TOKENS = Number(process.env.MAX_OUTPUT_TOKENS || 360);
 const OPENAI_TIMEOUT_MS = Number(process.env.OPENAI_TIMEOUT_MS || 45000);
+const VISION_TIMEOUT_MS = Number(process.env.VISION_TIMEOUT_MS || 65000);
 
 const ipBuckets = new Map();
 let daily = {
@@ -181,7 +182,7 @@ async function callOpenAI(messages) {
 
   for (let attempt = 1; attempt <= 3; attempt++) {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), OPENAI_TIMEOUT_MS);
+    const timer = setTimeout(() => controller.abort(), VISION_TIMEOUT_MS);
 
     try {
       const res = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -476,11 +477,29 @@ MODALITÀ VOCE MAURI AI
 
 
 
+
+app.get("/vision-health", (req, res) => {
+  resetDailyIfNeeded();
+  res.json({
+    ok: true,
+    vision: true,
+    model: process.env.OPENAI_VISION_MODEL || "gpt-4.1-mini",
+    jsonBodyLimit: process.env.JSON_BODY_LIMIT || "10mb",
+    maxVisionImageBytes: Number(process.env.MAX_VISION_IMAGE_BYTES || 4500000),
+    visionTimeoutMs: VISION_TIMEOUT_MS,
+    dailyAiCalls: daily.aiCalls,
+    dailyAiLimit: DAILY_AI_LIMIT
+  });
+});
+
+
 app.post("/api/ml-vision", async (req, res) => {
   try {
     resetDailyIfNeeded();
 
     const ip = getIp(req);
+    const visionRequestId = `vision-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
+    console.log(`[${visionRequestId}] Vision request started from ${ip}`);
     const question = String(req.body?.question || "").trim().slice(0, 900);
     let imageData = String(req.body?.imageData || "").trim();
 
@@ -505,6 +524,7 @@ app.post("/api/ml-vision", async (req, res) => {
     }
 
     const approxBytes = Math.ceil(imageData.length * 0.75);
+    console.log(`[${visionRequestId}] Vision image approx bytes: ${approxBytes}`);
     const maxImageBytes = Number(process.env.MAX_VISION_IMAGE_BYTES || 4500000);
 
     if (approxBytes > maxImageBytes) {
@@ -565,7 +585,7 @@ REGOLE
     const model = process.env.OPENAI_VISION_MODEL || "gpt-4.1-mini";
 
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), OPENAI_TIMEOUT_MS);
+    const timer = setTimeout(() => controller.abort(), VISION_TIMEOUT_MS);
 
     const responsesPayload = {
       model,
@@ -663,6 +683,8 @@ REGOLE
         error: "empty_vision_reply"
       });
     }
+
+    console.log(`[${visionRequestId}] Vision reply OK`);
 
     res.json({
       ok: true,
