@@ -1,7 +1,7 @@
 {
-  "name": "ml-informatica-ai-backend-v7-6-multipagina-mobile-clean",
-  "version": "7.6.0",
-  "description": "Mauri AI Voice V1.6 multipagina con mobile clean",
+  "name": "ml-informatica-ai-backend-v7-7-mobile-nav-whatsapp-fix",
+  "version": "7.7.0",
+  "description": "Mauri AI Voice V1.7 fix mobile: nav interna visibile e WhatsApp solo icona",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
