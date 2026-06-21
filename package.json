@@ -1,7 +1,7 @@
 {
-  "name": "ml-informatica-ai-backend-v7-7-mobile-nav-whatsapp-fix",
-  "version": "7.7.0",
-  "description": "Mauri AI Voice V1.7 fix mobile: nav interna visibile e WhatsApp solo icona",
+  "name": "ml-informatica-ai-backend-v7-8-nav-persist-skip-intro",
+  "version": "7.8.0",
+  "description": "Mauri AI Voice V1.8 fix nav persistente mobile e Home senza intro",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
