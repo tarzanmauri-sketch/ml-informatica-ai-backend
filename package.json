@@ -1,7 +1,7 @@
 {
-  "name": "ml-informatica-ai-backend-v9-0-storico-lite",
-  "version": "9.0.0",
-  "description": "Mauri AI V3.0 Storico Lite: salvataggio pratiche locale cliente",
+  "name": "ml-informatica-ai-backend-v9-1-fix-dark-pages-close-ai",
+  "version": "9.1.0",
+  "description": "ML Informatica V3.1: fix sfondo dark pagine interne e pulsante chiudi Mauri AI",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
