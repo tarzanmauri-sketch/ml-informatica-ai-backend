@@ -1,7 +1,7 @@
 {
-  "name": "ml-informatica-ai-backend-v8-4-auto-cyber-scan",
-  "version": "8.4.0",
-  "description": "Mauri AI V2.4 Auto Cyber Scan: auto-analisi foto dopo upload",
+  "name": "ml-informatica-ai-backend-v8-5-vision-memory",
+  "version": "8.5.0",
+  "description": "Mauri AI V2.5 Vision Memory: la chat ricorda l'ultima foto analizzata",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
