@@ -472,6 +472,168 @@ MODALITÀ VOCE MAURI AI
 });
 
 
+
+app.post("/api/ml-vision", async (req, res) => {
+  try {
+    resetDailyIfNeeded();
+
+    const ip = getIp(req);
+    const question = String(req.body?.question || "").trim().slice(0, 900);
+    const imageData = String(req.body?.imageData || "").trim();
+
+    if (!OPENAI_API_KEY) {
+      return res.status(500).json({
+        ok: false,
+        reply: "Il collegamento AI non è configurato correttamente. Contatta Maurizio su WhatsApp.",
+        error: "OPENAI_API_KEY_missing"
+      });
+    }
+
+    if (!imageData || !imageData.startsWith("data:image/")) {
+      return res.status(400).json({
+        ok: false,
+        reply: "Non ho ricevuto una foto valida. Prova a scattare o caricare di nuovo l’immagine.",
+        error: "invalid_image"
+      });
+    }
+
+    const approxBytes = Math.ceil(imageData.length * 0.75);
+    const maxImageBytes = Number(process.env.MAX_VISION_IMAGE_BYTES || 6500000);
+
+    if (approxBytes > maxImageBytes) {
+      return res.status(413).json({
+        ok: false,
+        reply: "La foto è troppo grande. Prova a inviare uno screenshot o una foto meno pesante.",
+        error: "image_too_large"
+      });
+    }
+
+    if (!rateLimitOk(ip)) {
+      return res.json({ ok: false, reply: rateLimitReply(), blocked: true, reason: "rate_limited" });
+    }
+
+    if (daily.aiCalls >= DAILY_AI_LIMIT) {
+      return res.json({ ok: false, reply: dailyLimitReply(), blocked: true, reason: "daily_ai_limit" });
+    }
+
+    daily.aiCalls += 1;
+
+    const visionPrompt = `
+Sei Mauri AI Vision, assistente visuale del sito ML Informatica di Maurizio Lanini.
+
+OBIETTIVO
+Analizza foto o screenshot inviati dal cliente per assistenza informatica.
+
+Puoi aiutare a riconoscere:
+- etichette notebook, PC, monitor, stampanti, router, componenti;
+- modello, marca, seriale se leggibile;
+- schermate Windows Update, errori Windows, schermate blu, BIOS, Gestione dispositivi;
+- errori Outlook, Office, stampanti, Wi‑Fi, rete, antivirus;
+- problemi hardware visibili.
+
+REGOLE
+- Rispondi nella lingua usata dal cliente, se riconoscibile. Altrimenti italiano.
+- Non inventare marca/modello se non è leggibile: di' "sembra" o "non si legge bene".
+- Se leggi dati sensibili, non ripeterli tutti: cita solo ciò che serve.
+- Non dare istruzioni pericolose tipo spegnere forzatamente durante update senza prima verificare.
+- Se è Windows Update fermo, chiedi da quanto tempo è fermo e se il disco/led lavora.
+- Se è etichetta dispositivo, estrai marca/modello e spiega come procedere.
+- Se serve assistenza, prepara un riepilogo utile per Maurizio.
+- Stile: pratico, umano, professionale, massimo 180 parole.
+`;
+
+    const userText = question || "Analizza questa foto/screenshot per capire dispositivo, modello o problema informatico e dimmi come procedere.";
+
+    const payload = {
+      model: process.env.OPENAI_VISION_MODEL || MODEL,
+      messages: [
+        { role: "system", content: visionPrompt },
+        {
+          role: "user",
+          content: [
+            { type: "text", text: userText },
+            { type: "image_url", image_url: { url: imageData } }
+          ]
+        }
+      ],
+      temperature: 0.2,
+      max_tokens: Number(process.env.MAX_VISION_OUTPUT_TOKENS || 420)
+    };
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), OPENAI_TIMEOUT_MS);
+
+    const headers = {
+      "Authorization": `Bearer ${OPENAI_API_KEY}`,
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+      "Accept-Encoding": "identity"
+    };
+
+    if (typeof hashSafetyId === "function") {
+      headers["OpenAI-Safety-Identifier"] = hashSafetyId(ip);
+    }
+
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers,
+      body: JSON.stringify(payload),
+      signal: controller.signal
+    });
+
+    clearTimeout(timer);
+
+    const raw = await response.text();
+
+    if (!response.ok) {
+      console.error("Vision OpenAI error:", response.status, raw.slice(0, 700));
+      return res.status(500).json({
+        ok: false,
+        reply: "Non sono riuscito ad analizzare la foto in questo momento. Riprova tra poco oppure inviala a Maurizio su WhatsApp.",
+        error: "vision_openai_error",
+        detail: raw.slice(0, 400)
+      });
+    }
+
+    let data;
+    try {
+      data = JSON.parse(raw);
+    } catch (err) {
+      return res.status(500).json({
+        ok: false,
+        reply: "La risposta AI non era leggibile. Riprova tra poco.",
+        error: "vision_response_not_json"
+      });
+    }
+
+    const reply = data?.choices?.[0]?.message?.content?.trim();
+
+    if (!reply) {
+      return res.status(500).json({
+        ok: false,
+        reply: "Non sono riuscito a ricavare informazioni utili dalla foto. Prova con un’immagine più nitida.",
+        error: "empty_vision_reply"
+      });
+    }
+
+    res.json({
+      ok: true,
+      reply,
+      usage: data.usage || null
+    });
+
+  } catch (err) {
+    console.error("ML Vision error:", err?.message || err);
+    res.status(500).json({
+      ok: false,
+      reply: "Errore tecnico durante l’analisi della foto. Riprova tra qualche secondo o contatta Maurizio su WhatsApp.",
+      error: "vision_backend_error",
+      detail: String(err?.message || err).slice(0, 280)
+    });
+  }
+});
+
+
 app.listen(PORT, () => {
   console.log(`ML Informatica AI Assistant v6 hardware attuale attivo sulla porta ${PORT}`);
 });

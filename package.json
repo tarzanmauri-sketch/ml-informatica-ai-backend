@@ -1,7 +1,7 @@
 {
-  "name": "ml-informatica-ai-backend-v7-10-safe-no-white-intro",
-  "version": "7.10.0",
-  "description": "Mauri AI Voice V1.10 safe: rimuove V1.9 e corregge Home senza pagina bianca",
+  "name": "ml-informatica-ai-backend-v8-0-vision-test",
+  "version": "8.0.0",
+  "description": "Mauri AI V2.0 Vision TEST: analisi foto/screenshot per modelli ed errori",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
