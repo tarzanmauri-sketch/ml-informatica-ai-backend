@@ -1,7 +1,7 @@
 {
-  "name": "ml-informatica-ai-backend-v7-1-voice-male-mic",
-  "version": "7.1.0",
-  "description": "Backend Mauri AI Voice V1.1 con voce maschile default cedar e microfono più visibile",
+  "name": "ml-informatica-ai-backend-v7-2-multilingua-accento",
+  "version": "7.2.0",
+  "description": "Mauri AI Voice V1.2: multilingua e italiano con istruzioni anti-cadenza americana",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
