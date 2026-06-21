@@ -3,7 +3,7 @@ const cors = require("cors");
 
 const app = express();
 app.use(cors());
-app.use(express.json({ limit: "64kb" }));
+app.use(express.json({ limit: process.env.JSON_BODY_LIMIT || "10mb" }));
 
 const PORT = process.env.PORT || 3000;
 const MODEL = process.env.OPENAI_MODEL || "gpt-4.1-mini";
@@ -505,7 +505,7 @@ app.post("/api/ml-vision", async (req, res) => {
     }
 
     const approxBytes = Math.ceil(imageData.length * 0.75);
-    const maxImageBytes = Number(process.env.MAX_VISION_IMAGE_BYTES || 6500000);
+    const maxImageBytes = Number(process.env.MAX_VISION_IMAGE_BYTES || 4500000);
 
     if (approxBytes > maxImageBytes) {
       return res.status(413).json({
@@ -680,6 +680,19 @@ REGOLE
       detail: String(err?.message || err).slice(0, 280)
     });
   }
+});
+
+
+
+app.use((err, req, res, next) => {
+  if (err && (err.type === "entity.too.large" || err.status === 413)) {
+    return res.status(413).json({
+      ok: false,
+      reply: "La foto è troppo pesante per essere analizzata. Prova a scattare una foto più vicina, meno pesante, oppure uno screenshot.",
+      error: "payload_too_large"
+    });
+  }
+  next(err);
 });
 
 

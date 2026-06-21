@@ -1,7 +1,7 @@
 {
-  "name": "ml-informatica-ai-backend-v8-1-vision-fix",
-  "version": "8.1.0",
-  "description": "Mauri AI V2.1 Vision FIX: Responses API + fallback Chat Completions e prompt voce foto",
+  "name": "ml-informatica-ai-backend-v8-2-fix-foto-payload",
+  "version": "8.2.0",
+  "description": "Mauri AI V2.2 Vision FIX: aumenta limite JSON foto e comprime meglio immagini iPhone",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
