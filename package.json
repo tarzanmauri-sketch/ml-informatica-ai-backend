@@ -1,7 +1,7 @@
 {
-  "name": "ml-informatica-ai-backend-v9-2-restore-ai-chiudi-sicuro",
-  "version": "9.2.0",
-  "description": "ML Informatica V3.2: restore apertura Mauri AI mobile + chiudi chat sicuro",
+  "name": "ml-informatica-ai-backend-v9-3-emergency-restore-mobile",
+  "version": "9.3.0",
+  "description": "ML Informatica V3.3 emergency restore: Mauri AI mobile funzionante + sfondo dark",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
