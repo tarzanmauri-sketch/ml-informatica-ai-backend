@@ -9,6 +9,20 @@ const PORT = process.env.PORT || 3000;
 const MODEL = process.env.OPENAI_MODEL || "gpt-4.1-mini";
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
+// ====== MAURI AI VOICE V1 TEST ======
+const REALTIME_MODEL = process.env.REALTIME_MODEL || "gpt-realtime-2";
+const REALTIME_VOICE = process.env.REALTIME_VOICE || "marin";
+const VOICE_MAX_SESSIONS_PER_WINDOW = Number(process.env.VOICE_MAX_SESSIONS_PER_WINDOW || 6);
+const VOICE_WINDOW_MINUTES = Number(process.env.VOICE_WINDOW_MINUTES || 30);
+const DAILY_VOICE_LIMIT = Number(process.env.DAILY_VOICE_LIMIT || 40);
+const OPENAI_REALTIME_TIMEOUT_MS = Number(process.env.OPENAI_REALTIME_TIMEOUT_MS || 30000);
+
+const voiceBuckets = new Map();
+let dailyVoice = {
+  day: new Date().toISOString().slice(0, 10),
+  sessions: 0
+};
+
 // ====== PROTEZIONI NON DISTRUTTIVE ======
 const MAX_MESSAGE_CHARS = Number(process.env.MAX_MESSAGE_CHARS || 1500);
 const MAX_MESSAGES_PER_WINDOW = Number(process.env.MAX_MESSAGES_PER_WINDOW || 12);
@@ -37,6 +51,40 @@ function resetDailyIfNeeded() {
     daily.day = today;
     daily.aiCalls = 0;
   }
+}
+
+function resetDailyVoiceIfNeeded() {
+  const today = new Date().toISOString().slice(0, 10);
+  if (dailyVoice.day !== today) {
+    dailyVoice.day = today;
+    dailyVoice.sessions = 0;
+  }
+}
+
+function voiceRateLimitOk(ip) {
+  const now = Date.now();
+  const windowMs = VOICE_WINDOW_MINUTES * 60 * 1000;
+  const bucket = voiceBuckets.get(ip) || [];
+  const fresh = bucket.filter(ts => now - ts < windowMs);
+
+  if (fresh.length >= VOICE_MAX_SESSIONS_PER_WINDOW) {
+    voiceBuckets.set(ip, fresh);
+    return false;
+  }
+
+  fresh.push(now);
+  voiceBuckets.set(ip, fresh);
+  return true;
+}
+
+function hashSafetyId(value) {
+  let hash = 2166136261;
+  const str = String(value || "unknown");
+  for (let i = 0; i < str.length; i++) {
+    hash ^= str.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return `mlinf-${(hash >>> 0).toString(16)}`;
 }
 
 function rateLimitOk(ip) {
@@ -200,6 +248,11 @@ app.get("/", (req, res) => {
   });
 });
 
+app.get("/voice-health", (req, res) => {
+  resetDailyVoiceIfNeeded();
+  res.json({ ok: true, voice: true, realtimeModel: REALTIME_MODEL, realtimeVoice: REALTIME_VOICE, dailyVoiceSessions: dailyVoice.sessions, dailyVoiceLimit: DAILY_VOICE_LIMIT });
+});
+
 app.get("/health", (req, res) => {
   resetDailyIfNeeded();
   res.json({
@@ -266,6 +319,142 @@ app.post("/api/ml-assistant", async (req, res) => {
     });
   }
 });
+
+
+app.post("/api/realtime-session", async (req, res) => {
+  try {
+    resetDailyIfNeeded();
+    resetDailyVoiceIfNeeded();
+
+    const ip = getIp(req);
+
+    if (!OPENAI_API_KEY) {
+      return res.status(500).json({
+        ok: false,
+        error: "OPENAI_API_KEY_missing",
+        message: "OPENAI_API_KEY mancante nelle variabili ambiente Render."
+      });
+    }
+
+    if (!voiceRateLimitOk(ip)) {
+      return res.status(429).json({
+        ok: false,
+        error: "voice_rate_limited",
+        message: "Hai aperto molte sessioni voce in poco tempo. Riprova tra qualche minuto o usa la chat scritta."
+      });
+    }
+
+    if (dailyVoice.sessions >= DAILY_VOICE_LIMIT) {
+      return res.status(429).json({
+        ok: false,
+        error: "daily_voice_limit",
+        message: "Il limite giornaliero delle sessioni voce è stato raggiunto. Usa la chat scritta o WhatsApp."
+      });
+    }
+
+    dailyVoice.sessions += 1;
+
+    const voiceInstructions = `${systemPrompt}
+
+MODALITÀ VOCE MAURI AI
+- Stai parlando a voce con un visitatore del sito ML Informatica.
+- Rispondi in italiano naturale, con frasi brevi e chiare.
+- Non fare monologhi lunghi: massimo 45-70 parole salvo richiesta di dettaglio.
+- Se il cliente descrive un problema, fai una domanda mirata alla volta.
+- Per PC lento chiedi soprattutto: fisso/portatile, Windows/Mac, SSD o hard disk, RAM se nota.
+- Non dire "ti metto in contatto" se non puoi farlo automaticamente.
+- Se il cliente vuole assistenza, proponi: "Posso prepararti un messaggio da inviare a Maurizio su WhatsApp".
+- Non inventare prezzi, disponibilità, appuntamenti o diagnosi certe.
+- Tono: tecnico, umano, rassicurante, professionale. Niente battute da gelataio.`;
+
+    const sessionConfig = {
+      session: {
+        type: "realtime",
+        model: REALTIME_MODEL,
+        instructions: voiceInstructions,
+        audio: {
+          output: {
+            voice: REALTIME_VOICE
+          }
+        }
+      }
+    };
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), OPENAI_REALTIME_TIMEOUT_MS);
+
+    const response = await fetch("https://api.openai.com/v1/realtime/client_secrets", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${OPENAI_API_KEY}`,
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "OpenAI-Safety-Identifier": hashSafetyId(ip)
+      },
+      body: JSON.stringify(sessionConfig),
+      signal: controller.signal
+    });
+
+    clearTimeout(timer);
+
+    const raw = await response.text();
+
+    if (!response.ok) {
+      console.error("Realtime client secret error:", response.status, raw.slice(0, 700));
+      return res.status(500).json({
+        ok: false,
+        error: "realtime_session_error",
+        detail: raw.slice(0, 500)
+      });
+    }
+
+    let data;
+    try {
+      data = JSON.parse(raw);
+    } catch (err) {
+      return res.status(500).json({
+        ok: false,
+        error: "realtime_response_not_json",
+        detail: raw.slice(0, 500)
+      });
+    }
+
+    const clientSecret =
+      data?.value ||
+      data?.client_secret?.value ||
+      data?.client_secret ||
+      data?.secret ||
+      null;
+
+    if (!clientSecret) {
+      return res.status(500).json({
+        ok: false,
+        error: "realtime_client_secret_missing",
+        detail: JSON.stringify(data).slice(0, 500)
+      });
+    }
+
+    res.json({
+      ok: true,
+      client_secret: clientSecret,
+      expires_at: data?.expires_at || data?.client_secret?.expires_at || null,
+      model: REALTIME_MODEL,
+      voice: REALTIME_VOICE,
+      dailyVoiceSessions: dailyVoice.sessions,
+      dailyVoiceLimit: DAILY_VOICE_LIMIT
+    });
+
+  } catch (err) {
+    console.error("Realtime session error:", err?.message || err);
+    res.status(500).json({
+      ok: false,
+      error: "voice_backend_error",
+      message: "Errore tecnico nella creazione della sessione voce. Usa la chat scritta o riprova tra poco.",
+      detail: String(err?.message || err).slice(0, 280)
+    });
+  }
+});
+
 
 app.listen(PORT, () => {
   console.log(`ML Informatica AI Assistant v6 hardware attuale attivo sulla porta ${PORT}`);

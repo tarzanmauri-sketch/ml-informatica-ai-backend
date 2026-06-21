@@ -1,7 +1,7 @@
 {
-  "name": "ml-informatica-ai-backend-v6-hardware-attuale",
-  "version": "6.0.0",
-  "description": "Backend Mauri AI con prompt aggiornato per hardware recente: RTX 5090, Ryzen 9 9950X, disponibilità e prezzi non inventati",
+  "name": "ml-informatica-ai-backend-v7-voice-test",
+  "version": "7.0.0",
+  "description": "Backend Mauri AI con chat v6 e modulo Voice V1 TEST Realtime",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
