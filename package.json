@@ -1,7 +1,7 @@
 {
-  "name": "ml-informatica-ai-backend-v8-0-vision-test",
-  "version": "8.0.0",
-  "description": "Mauri AI V2.0 Vision TEST: analisi foto/screenshot per modelli ed errori",
+  "name": "ml-informatica-ai-backend-v8-1-vision-fix",
+  "version": "8.1.0",
+  "description": "Mauri AI V2.1 Vision FIX: Responses API + fallback Chat Completions e prompt voce foto",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"

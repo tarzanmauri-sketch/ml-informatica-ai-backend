@@ -375,6 +375,8 @@ MODALITÀ VOCE MAURI AI
 - Per PC lento chiedi soprattutto: fisso/portatile, Windows/Mac, SSD o hard disk, RAM se nota.
 - Non dire "ti metto in contatto" se non puoi farlo automaticamente.
 - Se il cliente vuole assistenza, proponi nella sua lingua: "Premi il pulsante WhatsApp nella schermata voce: ti preparo il messaggio per Maurizio con il problema spiegato".
+- Se il cliente non sa marca/modello del PC, notebook, monitor, stampante o router, suggerisci: "Apri Scrivi a Mauri AI e usa Foto/screenshot per Mauri AI per farmi vedere l'etichetta o la schermata".
+- Se il cliente descrive una schermata bloccata, errore Windows, Windows Update fermo, Outlook, stampante o schermata blu, suggerisci di usare la funzione foto nella chat scritta per far vedere la schermata.
 - Non inventare prezzi, disponibilità, appuntamenti o diagnosi certe.
 - Tono: tecnico, umano, rassicurante, professionale. Niente battute da gelataio.`;
 
@@ -473,13 +475,14 @@ MODALITÀ VOCE MAURI AI
 
 
 
+
 app.post("/api/ml-vision", async (req, res) => {
   try {
     resetDailyIfNeeded();
 
     const ip = getIp(req);
     const question = String(req.body?.question || "").trim().slice(0, 900);
-    const imageData = String(req.body?.imageData || "").trim();
+    let imageData = String(req.body?.imageData || "").trim();
 
     if (!OPENAI_API_KEY) {
       return res.status(500).json({
@@ -495,6 +498,10 @@ app.post("/api/ml-vision", async (req, res) => {
         reply: "Non ho ricevuto una foto valida. Prova a scattare o caricare di nuovo l’immagine.",
         error: "invalid_image"
       });
+    }
+
+    if (imageData.startsWith("data:image/jpg;base64,")) {
+      imageData = imageData.replace("data:image/jpg;base64,", "data:image/jpeg;base64,");
     }
 
     const approxBytes = Math.ceil(imageData.length * 0.75);
@@ -542,26 +549,7 @@ REGOLE
 - Stile: pratico, umano, professionale, massimo 180 parole.
 `;
 
-    const userText = question || "Analizza questa foto/screenshot per capire dispositivo, modello o problema informatico e dimmi come procedere.";
-
-    const payload = {
-      model: process.env.OPENAI_VISION_MODEL || MODEL,
-      messages: [
-        { role: "system", content: visionPrompt },
-        {
-          role: "user",
-          content: [
-            { type: "text", text: userText },
-            { type: "image_url", image_url: { url: imageData } }
-          ]
-        }
-      ],
-      temperature: 0.2,
-      max_tokens: Number(process.env.MAX_VISION_OUTPUT_TOKENS || 420)
-    };
-
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), OPENAI_TIMEOUT_MS);
+    const userText = question || "Analizza questa foto o schermata: dimmi cosa vedi, che modello/problema sembra, e come procedere in modo sicuro.";
 
     const headers = {
       "Authorization": `Bearer ${OPENAI_API_KEY}`,
@@ -574,24 +562,74 @@ REGOLE
       headers["OpenAI-Safety-Identifier"] = hashSafetyId(ip);
     }
 
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    const model = process.env.OPENAI_VISION_MODEL || "gpt-4.1-mini";
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), OPENAI_TIMEOUT_MS);
+
+    const responsesPayload = {
+      model,
+      instructions: visionPrompt,
+      input: [
+        {
+          role: "user",
+          content: [
+            { type: "input_text", text: userText },
+            { type: "input_image", image_url: imageData }
+          ]
+        }
+      ],
+      temperature: 0.2,
+      max_output_tokens: Number(process.env.MAX_VISION_OUTPUT_TOKENS || 420)
+    };
+
+    let response = await fetch("https://api.openai.com/v1/responses", {
       method: "POST",
       headers,
-      body: JSON.stringify(payload),
+      body: JSON.stringify(responsesPayload),
       signal: controller.signal
     });
 
-    clearTimeout(timer);
-
-    const raw = await response.text();
+    let raw = await response.text();
 
     if (!response.ok) {
-      console.error("Vision OpenAI error:", response.status, raw.slice(0, 700));
+      console.error("Vision Responses API error:", response.status, raw.slice(0, 700));
+
+      const chatPayload = {
+        model,
+        messages: [
+          { role: "system", content: visionPrompt },
+          {
+            role: "user",
+            content: [
+              { type: "text", text: userText },
+              { type: "image_url", image_url: { url: imageData } }
+            ]
+          }
+        ],
+        temperature: 0.2,
+        max_tokens: Number(process.env.MAX_VISION_OUTPUT_TOKENS || 420)
+      };
+
+      response = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers,
+        body: JSON.stringify(chatPayload),
+        signal: controller.signal
+      });
+
+      raw = await response.text();
+    }
+
+    clearTimeout(timer);
+
+    if (!response.ok) {
+      console.error("Vision OpenAI final error:", response.status, raw.slice(0, 900));
       return res.status(500).json({
         ok: false,
-        reply: "Non sono riuscito ad analizzare la foto in questo momento. Riprova tra poco oppure inviala a Maurizio su WhatsApp.",
+        reply: "Non sono riuscito ad analizzare la foto in questo momento. Riprova con una foto più nitida oppure inviala a Maurizio su WhatsApp.",
         error: "vision_openai_error",
-        detail: raw.slice(0, 400)
+        detail: raw.slice(0, 500)
       });
     }
 
@@ -606,7 +644,17 @@ REGOLE
       });
     }
 
-    const reply = data?.choices?.[0]?.message?.content?.trim();
+    const outputText =
+      typeof data.output_text === "string" ? data.output_text.trim() : "";
+
+    const outputJoined = Array.isArray(data.output)
+      ? data.output.flatMap(item => item.content || []).map(c => c.text || c.transcript || "").join("\\n").trim()
+      : "";
+
+    const chatText =
+      data?.choices?.[0]?.message?.content?.trim?.() || "";
+
+    const reply = outputText || outputJoined || chatText;
 
     if (!reply) {
       return res.status(500).json({
@@ -619,7 +667,8 @@ REGOLE
     res.json({
       ok: true,
       reply,
-      usage: data.usage || null
+      usage: data.usage || null,
+      model
     });
 
   } catch (err) {
