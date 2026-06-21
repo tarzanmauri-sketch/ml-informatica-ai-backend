@@ -1,7 +1,7 @@
 {
-  "name": "ml-informatica-ai-backend-v7-3-stabile-multilingua-label",
-  "version": "7.3.0",
-  "description": "Mauri AI Voice V1.3 stabile: frontend V1.1 funzionante, multilingua backend, label chat corretta",
+  "name": "ml-informatica-ai-backend-v7-5-site-translate",
+  "version": "7.5.0",
+  "description": "Mauri AI Voice V1.5 con selettore traduzione sito multilingua",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"

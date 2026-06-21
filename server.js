@@ -374,7 +374,7 @@ MODALITÀ VOCE MAURI AI
 - Se il cliente descrive un problema, fai una domanda mirata alla volta.
 - Per PC lento chiedi soprattutto: fisso/portatile, Windows/Mac, SSD o hard disk, RAM se nota.
 - Non dire "ti metto in contatto" se non puoi farlo automaticamente.
-- Se il cliente vuole assistenza, proponi nella sua lingua: "Posso prepararti un messaggio da inviare a Maurizio su WhatsApp".
+- Se il cliente vuole assistenza, proponi nella sua lingua: "Premi il pulsante WhatsApp nella schermata voce: ti preparo il messaggio per Maurizio con il problema spiegato".
 - Non inventare prezzi, disponibilità, appuntamenti o diagnosi certe.
 - Tono: tecnico, umano, rassicurante, professionale. Niente battute da gelataio.`;
 
@@ -384,6 +384,11 @@ MODALITÀ VOCE MAURI AI
         model: REALTIME_MODEL,
         instructions: voiceInstructions,
         audio: {
+          input: {
+            transcription: {
+              model: process.env.REALTIME_TRANSCRIPTION_MODEL || "gpt-4o-mini-transcribe"
+            }
+          },
           output: {
             voice: REALTIME_VOICE
           }
