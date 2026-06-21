@@ -1,7 +1,7 @@
 {
-  "name": "ml-informatica-ai-backend-v8-8-vision-ui-clean",
-  "version": "8.8.0",
-  "description": "Mauri AI V2.8: pulizia UI Vision, bottone senza scia e testo più chiaro",
+  "name": "ml-informatica-ai-backend-v8-9-vision-mobile-compact",
+  "version": "8.9.0",
+  "description": "Mauri AI V2.9: UI Vision compatta mobile, stessa funzione",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
