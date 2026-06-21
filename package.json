@@ -1,7 +1,7 @@
 {
-  "name": "ml-informatica-ai-backend-v8-9-vision-mobile-compact",
-  "version": "8.9.0",
-  "description": "Mauri AI V2.9: UI Vision compatta mobile, stessa funzione",
+  "name": "ml-informatica-ai-backend-v9-0-storico-lite",
+  "version": "9.0.0",
+  "description": "Mauri AI V3.0 Storico Lite: salvataggio pratiche locale cliente",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
