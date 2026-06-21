@@ -1,7 +1,7 @@
 {
-  "name": "ml-informatica-ai-backend-v7-9-intro-once",
-  "version": "7.9.0",
-  "description": "Mauri AI Voice V1.9: intro solo prima volta e Home senza replay",
+  "name": "ml-informatica-ai-backend-v7-10-safe-no-white-intro",
+  "version": "7.10.0",
+  "description": "Mauri AI Voice V1.10 safe: rimuove V1.9 e corregge Home senza pagina bianca",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
