@@ -1,7 +1,7 @@
 {
-  "name": "ml-informatica-ai-backend-v9-4-close-native-visible",
-  "version": "9.4.0",
-  "description": "ML Informatica V3.4: chiusura chat sicura usando il bottone nativo",
+  "name": "ml-informatica-ai-backend-v11-8-prompt-mauri-ai-whatsapp",
+  "version": "11.8.0",
+  "description": "ML Informatica V5.8: prompt Mauri AI corretto per richieste/preventivi e invio a Maurizio",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
