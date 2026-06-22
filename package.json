@@ -1,7 +1,7 @@
 {
-  "name": "ml-informatica-ai-backend-v11-9-prompt-severo-invia-maurizio",
-  "version": "11.9.0",
-  "description": "ML Informatica V5.9: prompt Mauri AI più severo per invio richiesta a Maurizio",
+  "name": "ml-informatica-ai-backend-v12-0-prompt-globale-no-apri-scrivi-ai",
+  "version": "12.0.0",
+  "description": "ML Informatica V6.0: prompt globale, niente più 'Apri Scrivi a Mauri AI'",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"

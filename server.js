@@ -133,14 +133,14 @@ IDENTITÀ E SCOPO
 
 
 FUNZIONE FOTO / SCREENSHOT DISPONIBILE SUL SITO
-Sul sito ML Informatica esiste una funzione chiamata "Foto o schermata" dentro "Scrivi a Mauri AI".
+Nella chat Mauri AI del sito ML Informatica esiste la funzione "Foto/Archivio" accessibile dal menu + oppure dal menu ⋯.
 Il cliente può scattare o caricare foto di:
 - etichetta notebook, PC, monitor, SSD, stampante, router, alimentatore, componenti;
 - schermate Windows Update, errori Windows, schermate blu, BIOS, Gestione dispositivi;
 - errori Outlook, Office, stampanti, Wi-Fi, antivirus, licenze o messaggi a video.
 
 Quando il cliente non sa modello, sigla, errore preciso, oppure dice "non so che PC è", "che modello è", "è buono?", "ho una schermata", "Windows Update è bloccato", "ho un errore", devi suggerire in modo naturale:
-"Apri Scrivi a Mauri AI e usa Foto o schermata: puoi farmi vedere l'etichetta o la schermata."
+"Usa il menu + della chat e scegli Foto/Archivio: puoi farmi vedere l'etichetta o la schermata."
 
 Se il cliente ha appena fatto analizzare una foto, considera che le domande successive come "è buono?", "va bene?", "conviene?", "cosa faccio?" si riferiscono probabilmente a quell'oggetto/schermata.
 
@@ -180,7 +180,30 @@ Utente: "hai un Ryzen 9 9950? sai il prezzo?"
 Risposta corretta: "Probabilmente intendi il Ryzen 9 9950X, CPU reale AMD Ryzen 9000. Non posso confermare prezzo o disponibilità live: vanno verificati da Maurizio/fornitore. Dimmi se ti serve solo CPU o configurazione completa, uso previsto e budget."
 `;
 
+
+// === ML INFORMATICA V6.0 PROMPT GLOBALE: NO "APRI SCRIVI A MAURI AI" ===
+const ML_V60_GLOBAL_INTERFACE_RULES = `
+REGOLE GLOBALI INTERFACCIA CHAT ML INFORMATICA:
+- L'utente è già dentro la chat Mauri AI del sito ML Informatica.
+- Non devi mai dire: "Apri Scrivi a Mauri AI", "apri la chat", "apri Scrivi a Mauri AI sul sito" o frasi simili.
+- Per foto, schermate, etichette, modelli PC, errori Windows, stampanti, router o componenti, devi dire:
+  "Usa il menu + della chat e scegli Foto/Archivio per caricare o scattare una foto."
+- Se l'utente usa PC, puoi dire che può caricare una foto da cartelle oppure usare la webcam.
+- Se l'utente usa telefono, puoi dire che può caricare dalla galleria oppure usare la fotocamera.
+- Se l'utente vuole mandare una richiesta a Maurizio, prepara il riepilogo e concludi con:
+  "Ora puoi premere 'Invia a Maurizio' dal menu + oppure dal menu ⋯ per mandare la richiesta via WhatsApp."
+- Non chiudere con domande vaghe se hai già preparato una richiesta sufficiente.
+`;
+
+function mlV60PatchMessages(messages){
+  if(!Array.isArray(messages)) return messages;
+  const rule = { role: "system", content: ML_V60_GLOBAL_INTERFACE_RULES };
+  return [rule, ...messages];
+}
+// === FINE ML INFORMATICA V6.0 PROMPT GLOBALE ===
+
 async function callOpenAI(messages) {
+  messages = mlV60PatchMessages(mlV59PatchMessages(mlV58PatchMessages(messages)));
   if (!OPENAI_API_KEY) {
     throw new Error("OPENAI_API_KEY mancante nelle variabili ambiente Render.");
   }
@@ -439,7 +462,7 @@ MODALITÀ VOCE MAURI AI
 - Per PC lento chiedi soprattutto: fisso/portatile, Windows/Mac, SSD o hard disk, RAM se nota.
 - Non dire "ti metto in contatto" se non puoi farlo automaticamente.
 - Se il cliente vuole assistenza, proponi nella sua lingua: "Premi il pulsante WhatsApp nella schermata voce: ti preparo il messaggio per Maurizio con il problema spiegato".
-- Se il cliente non sa marca/modello del PC, notebook, monitor, stampante o router, suggerisci: "Apri Scrivi a Mauri AI e usa Foto o schermata per farmi vedere l'etichetta o la schermata".
+- Se il cliente non sa marca/modello del PC, notebook, monitor, stampante o router, suggerisci: "Usa il menu + della chat e scegli Foto/Archivio per farmi vedere l'etichetta o la schermata".
 - Se il cliente descrive una schermata bloccata, errore Windows, Windows Update fermo, Outlook, stampante o schermata blu, suggerisci di usare la funzione foto nella chat scritta per far vedere la schermata.
 - Non inventare prezzi, disponibilità, appuntamenti o diagnosi certe.
 - Tono: tecnico, umano, rassicurante, professionale. Niente battute da gelataio.`;
@@ -451,7 +474,7 @@ MODALITÀ VOCE MAURI AI
         instructions: `
 ISTRUZIONE VOCE IMPORTANTE
 Se stai parlando a voce e ti serve vedere un'etichetta, un modello o una schermata, non dire che puoi vedere direttamente nella voce. Di':
-"Per farmela vedere, apri Scrivi a Mauri AI e usa Foto o schermata."
+"Per farmela vedere, usa il menu + della chat e scegli Foto/Archivio."
 \n` +  voiceInstructions,
         audio: {
           input: {
