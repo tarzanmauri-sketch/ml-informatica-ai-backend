@@ -1,7 +1,7 @@
 {
-  "name": "ml-informatica-ai-backend-v11-8-prompt-mauri-ai-whatsapp",
-  "version": "11.8.0",
-  "description": "ML Informatica V5.8: prompt Mauri AI corretto per richieste/preventivi e invio a Maurizio",
+  "name": "ml-informatica-ai-backend-v11-9-prompt-severo-invia-maurizio",
+  "version": "11.9.0",
+  "description": "ML Informatica V5.9: prompt Mauri AI più severo per invio richiesta a Maurizio",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"

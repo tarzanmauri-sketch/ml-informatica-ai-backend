@@ -316,6 +316,25 @@ function mlV58PatchMessages(messages){
 }
 // === FINE ML INFORMATICA V5.8 PROMPT FIX ===
 
+
+// === ML INFORMATICA V5.9 PROMPT FIX: CHIUSURA OPERATIVA INVIA A MAURIZIO ===
+const ML_V59_SEND_TO_MAURIZIO_RULES = `
+REGOLE OBBLIGATORIE PER RICHIESTE DA INVIARE A MAURIZIO:
+- Quando l'utente chiede un preventivo, una richiesta di assistenza, una configurazione PC, un riepilogo o dice "mandiamo a Maurizio/Mauri", devi preparare un testo ordinato e pronto da inviare.
+- Dopo aver preparato il testo, chiudi SEMPRE con una frase operativa:
+  "Ora puoi premere 'Invia a Maurizio' dal menu + oppure dal menu ⋯ per mandare la richiesta via WhatsApp."
+- Non chiudere con domande vaghe tipo "Vuoi?", "Vuoi che ti aiuti?", "Se vuoi..." quando la richiesta è già sufficientemente pronta.
+- Se mancano dati davvero essenziali, chiedili prima in modo breve. Se invece i dati bastano per una prima richiesta, prepara comunque il riepilogo e invita a inviarlo.
+- Non dire mai "Apri Scrivi a Mauri AI", perché l'utente è già dentro la chat.
+- Non promettere prezzi, disponibilità o tempi certi: scrivi che Maurizio/verifica fornitore confermerà prezzi e disponibilità aggiornati.
+`;
+function mlV59PatchMessages(messages){
+  if(!Array.isArray(messages)) return messages;
+  const rule = { role: "system", content: ML_V59_SEND_TO_MAURIZIO_RULES };
+  return [rule, ...messages];
+}
+// === FINE ML INFORMATICA V5.9 PROMPT FIX ===
+
 app.post("/api/ml-assistant", async (req, res) => {
   try {
     resetDailyIfNeeded();
